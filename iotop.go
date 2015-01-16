@@ -3,12 +3,14 @@ package main
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"log"
 	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type ProcessIO struct {
@@ -30,6 +32,9 @@ func NewProcessIOFromString(row_data string) (*ProcessIO, error) {
 	var err error
 	process_io := &ProcessIO{}
 
+	if process_io.disk_read_rate, err = strconv.ParseFloat(tokens[4], 64); err != nil {
+		return nil, err
+	}
 	if process_io.disk_write_rate, err = strconv.ParseFloat(tokens[6], 64); err != nil {
 		return nil, err
 	}
@@ -66,11 +71,11 @@ func NewSample() *Sample {
 	}
 }
 
-func (s *Sample) Append(name string, process *ProcessIO) {
-	if val, has := s.processes_io[name]; has {
+func (s *Sample) Append(process *ProcessIO) {
+	if val, has := s.processes_io[process.Name]; has {
 		val.Aggregate(process)
 	} else {
-		s.processes_io[name] = process
+		s.processes_io[process.Name] = process
 	}
 }
 
@@ -84,10 +89,10 @@ func (s *Sample) Empty() bool {
 
 type IOTopCollector struct {
 	command_pipe      chan string
-	disk_read_rate    []map[string]float64
-	disk_write_rate   []map[string]float64
-	swapin_percent    []map[string]float64
-	io_percent        []map[string]float64
+	disk_read_rate    map[string]*StatSample
+	disk_write_rate   map[string]*StatSample
+	swapin_percent    map[string]*StatSample
+	io_percent        map[string]*StatSample
 	measurements_lock sync.RWMutex
 }
 
@@ -96,78 +101,51 @@ func (i *IOTopCollector) Run() {
 
 	i.command_pipe = make(chan string, 1000)
 
-	go i.executeIOTop(i.command_pipe)
+	go i.dummy(i.command_pipe)
+	// go i.executeIOTop(i.command_pipe)
 	go i.processOutput(i.command_pipe)
 
 	i.measurements_lock.Unlock()
 
 }
 
-func (i *IOTopCollector) AverageSamples(sample_list []map[string]float64) map[string]float64 {
-
-	aggregated := make(map[string]struct {
-		total float64
-		count float64
-	})
-
-	for _, sample := range sample_list {
-		for key, value := range sample {
-			entry := aggregated[key]
-			entry.total += value
-			entry.count += 1
-			aggregated[key] = entry
-		}
-	}
-
-	summary := make(map[string]float64, len(aggregated))
-	for key, val := range aggregated {
-		if val.count > 0 {
-			summary[key] = val.total / val.count
-		} else {
-			summary[key] = 0
-		}
-	}
-
-	return summary
-}
-
-func (i *IOTopCollector) GetAndPurgeIOPercent() map[string]float64 {
+func (i *IOTopCollector) GetAndPurgeIOPercent() map[string]*StatSample {
 	i.measurements_lock.Lock()
 	samples := i.io_percent
 	i.io_percent = nil
 	i.measurements_lock.Unlock()
 
-	return i.AverageSamples(samples)
+	return samples
 }
 
-func (i *IOTopCollector) GetAndPurgeSwapinPercent() map[string]float64 {
+func (i *IOTopCollector) GetAndPurgeSwapinPercent() map[string]*StatSample {
 	i.measurements_lock.Lock()
 	samples := i.swapin_percent
 	i.swapin_percent = nil
 	i.measurements_lock.Unlock()
 
-	return i.AverageSamples(samples)
+	return samples
 }
 
-func (i *IOTopCollector) GetAndPurgeDiskReadRate() map[string]float64 {
+func (i *IOTopCollector) GetAndPurgeDiskReadRate() map[string]*StatSample {
 	i.measurements_lock.Lock()
 	samples := i.disk_read_rate
 	i.disk_read_rate = nil
 	i.measurements_lock.Unlock()
 
-	return i.AverageSamples(samples)
+	return samples
 }
 
-func (i *IOTopCollector) GetAndPurgeDiskWriteRate() map[string]float64 {
+func (i *IOTopCollector) GetAndPurgeDiskWriteRate() map[string]*StatSample {
 	i.measurements_lock.Lock()
 	samples := i.disk_write_rate
 	i.disk_write_rate = nil
 	i.measurements_lock.Unlock()
 
-	return i.AverageSamples(samples)
+	return samples
 }
 
-func (i *IOTopCollector) GetUniqKeys(data map[string]float64) []string {
+func (i *IOTopCollector) GetUniqKeys(data map[string]*StatSample) []string {
 	var sample_list []string
 
 	for key := range data {
@@ -192,34 +170,67 @@ func (i *IOTopCollector) processOutput(data <-chan string) {
 			if err != nil {
 				continue
 			}
-
-			sample.Append(p.Name, p)
+			sample.Append(p)
 		}
 	}
 }
 
 func (i *IOTopCollector) FlushSample(sample *Sample) {
 	i.measurements_lock.Lock()
+	if i.disk_read_rate == nil {
+		i.disk_read_rate = make(map[string]*StatSample, len(sample.processes_io))
+	}
+
+	if i.disk_write_rate == nil {
+		i.disk_write_rate = make(map[string]*StatSample, len(sample.processes_io))
+	}
+
+	if i.io_percent == nil {
+		i.io_percent = make(map[string]*StatSample, len(sample.processes_io))
+	}
+
+	if i.swapin_percent == nil {
+		i.swapin_percent = make(map[string]*StatSample, len(sample.processes_io))
+	}
 
 	for key, val := range sample.processes_io {
-		iop := make(map[string]float64)
-		iop[key] = val.io_percent
-		i.io_percent = append(i.io_percent, iop)
+		if entry, has := i.disk_read_rate[key]; has {
+			entry.Append(val.disk_read_rate)
+		} else {
+			i.disk_read_rate[key] = NewStatSample(val.disk_read_rate)
+		}
 
-		swp := make(map[string]float64)
-		swp[key] = val.swapin_percent
-		i.swapin_percent = append(i.swapin_percent, swp)
+		if entry, has := i.disk_write_rate[key]; has {
+			entry.Append(val.disk_write_rate)
+		} else {
+			i.disk_write_rate[key] = NewStatSample(val.disk_write_rate)
+		}
 
-		drr := make(map[string]float64)
-		drr[key] = val.disk_read_rate
-		i.disk_read_rate = append(i.disk_read_rate, drr)
+		if entry, has := i.io_percent[key]; has {
+			entry.Append(val.io_percent)
+		} else {
+			i.io_percent[key] = NewStatSample(val.io_percent)
+		}
 
-		dwr := make(map[string]float64)
-		dwr[key] = val.disk_write_rate
-		i.disk_write_rate = append(i.disk_write_rate, dwr)
-
+		if entry, has := i.swapin_percent[key]; has {
+			entry.Append(val.swapin_percent)
+		} else {
+			i.swapin_percent[key] = NewStatSample(val.swapin_percent)
+		}
 	}
 	i.measurements_lock.Unlock()
+}
+
+func (i *IOTopCollector) dummy(ch chan<- string) {
+	for {
+		head := "Total DISK READ:"
+		ch <- head
+		for i := 1; i <= 50; i++ {
+			row := fmt.Sprintf("13:05:19 24086 be/4 cfapache    %d K/s    %d K/s  0.01 x  0.01 x process %d", i, i, i)
+			ch <- row
+		}
+		time.Sleep(1)
+	}
 }
 
 func (i *IOTopCollector) executeIOTop(ch chan<- string) {
@@ -245,4 +256,25 @@ func (i *IOTopCollector) executeIOTop(ch chan<- string) {
 	}
 
 	close(ch)
+}
+
+type StatSample struct {
+	total float64
+	count float64
+}
+
+func NewStatSample(value float64) *StatSample {
+	return &StatSample{
+		total: value,
+		count: 1,
+	}
+}
+
+func (s *StatSample) Append(value float64) {
+	s.count += 1
+	s.total += value
+}
+
+func (s *StatSample) GetAverage() float64 {
+	return s.total / s.count
 }

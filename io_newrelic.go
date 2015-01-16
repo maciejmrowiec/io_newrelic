@@ -4,10 +4,17 @@ import (
 	"flag"
 	"github.com/yvasiyarov/newrelic_platform_go"
 	"log"
+	"net/http"
+	// _ "net/http/pprof"
 	"os"
 )
 
 func main() {
+
+	// for profiling
+	// go func() {
+	// 	log.Println(http.ListenAndServe("localhost:6060", nil))
+	// }()
 
 	var err error
 	var verbose bool

@@ -3,7 +3,7 @@ package main
 type TotalIOPerCommand struct {
 	collector *IOTopCollector
 	path      string
-	samples   map[string]float64
+	samples   map[string]*StatSample
 }
 
 func NewTotalIOPerCommand(collector *IOTopCollector, path string) *TotalIOPerCommand {
@@ -22,8 +22,7 @@ func (t *TotalIOPerCommand) GetName(id string) string {
 }
 
 func (t *TotalIOPerCommand) GetValue(id string) (float64, error) {
-
-	return t.samples[id], nil
+	return t.samples[id].GetAverage(), nil
 }
 
 func (t *TotalIOPerCommand) GetIdList() []string {
@@ -34,7 +33,7 @@ func (t *TotalIOPerCommand) GetIdList() []string {
 type ReadRatePerCommand struct {
 	collector *IOTopCollector
 	path      string
-	samples   map[string]float64
+	samples   map[string]*StatSample
 }
 
 func NewReadRatePerCommand(collector *IOTopCollector, path string) *ReadRatePerCommand {
@@ -53,8 +52,7 @@ func (t *ReadRatePerCommand) GetName(id string) string {
 }
 
 func (t *ReadRatePerCommand) GetValue(id string) (float64, error) {
-
-	return t.samples[id], nil
+	return t.samples[id].GetAverage(), nil
 }
 
 func (t *ReadRatePerCommand) GetIdList() []string {
@@ -65,7 +63,7 @@ func (t *ReadRatePerCommand) GetIdList() []string {
 type WriteRatePerCommand struct {
 	collector *IOTopCollector
 	path      string
-	samples   map[string]float64
+	samples   map[string]*StatSample
 }
 
 func NewWriteRatePerCommand(collector *IOTopCollector, path string) *WriteRatePerCommand {
@@ -84,8 +82,7 @@ func (t *WriteRatePerCommand) GetName(id string) string {
 }
 
 func (t *WriteRatePerCommand) GetValue(id string) (float64, error) {
-
-	return t.samples[id], nil
+	return t.samples[id].GetAverage(), nil
 }
 
 func (t *WriteRatePerCommand) GetIdList() []string {
