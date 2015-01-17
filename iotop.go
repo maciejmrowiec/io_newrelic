@@ -10,8 +10,13 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
+
+func init() {
+	RowRegex = regexp.MustCompile("[\\s]+")
+}
+
+var RowRegex *regexp.Regexp
 
 type ProcessIO struct {
 	disk_read_rate  float64
@@ -24,7 +29,7 @@ type ProcessIO struct {
 // expected format:
 //13:05:19 24086 be/4 cfapache    0.00 K/s    0.00 K/s  0.00 %  0.00 % httpd -k start
 func NewProcessIOFromString(row_data string) (*ProcessIO, error) {
-	tokens := regexp.MustCompile("[\\s]+").Split(row_data, 13)
+	tokens := RowRegex.Split(row_data, 13)
 	if len(tokens) != 13 {
 		return nil, errors.New("Failed to parse row data for sample")
 	}
@@ -58,7 +63,7 @@ func (p *ProcessIO) Aggregate(process *ProcessIO) {
 
 // Total DISK READ: 0.20 K/s | Total DISK WRITE: 0.01 K/s
 func IsSampleSummary(row_data string) bool {
-	return strings.HasPrefix(row_data, "Total DISK READ:")
+	return strings.HasPrefix(row_data, "Total DISK READ")
 }
 
 type Sample struct {
@@ -88,7 +93,6 @@ func (s *Sample) Empty() bool {
 }
 
 type IOTopCollector struct {
-	command_pipe      chan string
 	disk_read_rate    map[string]*StatSample
 	disk_write_rate   map[string]*StatSample
 	swapin_percent    map[string]*StatSample
@@ -99,11 +103,10 @@ type IOTopCollector struct {
 func (i *IOTopCollector) Run() {
 	i.measurements_lock.Lock()
 
-	i.command_pipe = make(chan string, 1000)
+	command_pipe := make(chan string, 1000)
 
-	go i.dummy(i.command_pipe)
-	// go i.executeIOTop(i.command_pipe)
-	go i.processOutput(i.command_pipe)
+	go i.executeIOTop(command_pipe)
+	go i.processOutput(command_pipe)
 
 	i.measurements_lock.Unlock()
 
@@ -156,11 +159,13 @@ func (i *IOTopCollector) GetUniqKeys(data map[string]*StatSample) []string {
 }
 
 func (i *IOTopCollector) processOutput(data <-chan string) {
-	var sample *Sample
+	sample := NewSample()
 
 	for row := range data {
+
 		if IsSampleSummary(row) {
 			if sample != nil && !sample.Empty() {
+				fmt.Println("Flush Sample")
 				i.FlushSample(sample)
 			}
 
@@ -168,8 +173,10 @@ func (i *IOTopCollector) processOutput(data <-chan string) {
 		} else {
 			p, err := NewProcessIOFromString(row)
 			if err != nil {
+				fmt.Println(row)
 				continue
 			}
+
 			sample.Append(p)
 		}
 	}
@@ -219,18 +226,6 @@ func (i *IOTopCollector) FlushSample(sample *Sample) {
 		}
 	}
 	i.measurements_lock.Unlock()
-}
-
-func (i *IOTopCollector) dummy(ch chan<- string) {
-	for {
-		head := "Total DISK READ:"
-		ch <- head
-		for i := 1; i <= 50; i++ {
-			row := fmt.Sprintf("13:05:19 24086 be/4 cfapache    %d K/s    %d K/s  0.01 x  0.01 x process %d", i, i, i)
-			ch <- row
-		}
-		time.Sleep(1)
-	}
 }
 
 func (i *IOTopCollector) executeIOTop(ch chan<- string) {
