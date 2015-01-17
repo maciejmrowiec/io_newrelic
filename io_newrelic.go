@@ -4,7 +4,7 @@ import (
 	"flag"
 	"github.com/yvasiyarov/newrelic_platform_go"
 	"log"
-	"net/http"
+	// "net/http"
 	// _ "net/http/pprof"
 	"os"
 )
