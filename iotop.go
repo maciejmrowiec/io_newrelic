@@ -63,7 +63,7 @@ func (p *ProcessIO) Aggregate(process *ProcessIO) {
 
 // Total DISK READ: 0.20 K/s | Total DISK WRITE: 0.01 K/s
 func IsSampleSummary(row_data string) bool {
-	return strings.HasPrefix(row_data, "Total DISK READ")
+	return strings.Contains(row_data, "Total DISK READ")
 }
 
 type Sample struct {
@@ -172,7 +172,6 @@ func (i *IOTopCollector) processOutput(data <-chan string) {
 		} else {
 			p, err := NewProcessIOFromString(row)
 			if err != nil {
-				fmt.Println(row)
 				continue
 			}
 
