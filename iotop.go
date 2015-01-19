@@ -165,7 +165,6 @@ func (i *IOTopCollector) processOutput(data <-chan string) {
 
 		if IsSampleSummary(row) {
 			if sample != nil && !sample.Empty() {
-				fmt.Println("Flush Sample")
 				i.FlushSample(sample)
 			}
 

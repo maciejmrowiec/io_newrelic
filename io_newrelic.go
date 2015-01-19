@@ -45,6 +45,7 @@ func main() {
 	component.AddDynamicMetrica(NewTotalIOPerCommand(top, "io/process/total_io_percentage"))
 	component.AddDynamicMetrica(NewReadRatePerCommand(top, "io/process/read_rate"))
 	component.AddDynamicMetrica(NewWriteRatePerCommand(top, "io/process/write_rate"))
+	component.AddDynamicMetrica(NewSwapinPerCommand(top, "io/process/swapin_percentage"))
 
 	plugin.Verbose = verbose
 	plugin.Run()

@@ -89,3 +89,33 @@ func (t *WriteRatePerCommand) GetIdList() []string {
 	t.samples = t.collector.GetAndPurgeDiskWriteRate()
 	return t.collector.GetUniqKeys(t.samples)
 }
+
+type SwapinPerCommand struct {
+	collector *IOTopCollector
+	path      string
+	samples   map[string]*StatSample
+}
+
+func NewSwapinPerCommand(collector *IOTopCollector, path string) *SwapinPerCommand {
+	return &SwapinPerCommand{
+		collector: collector,
+		path:      path,
+	}
+}
+
+func (t *SwapinPerCommand) GetUnits() string {
+	return "%"
+}
+
+func (t *SwapinPerCommand) GetName(id string) string {
+	return t.path + "/" + id
+}
+
+func (t *SwapinPerCommand) GetValue(id string) (float64, error) {
+	return t.samples[id].GetAverage(), nil
+}
+
+func (t *SwapinPerCommand) GetIdList() []string {
+	t.samples = t.collector.GetAndPurgeSwapinPercent()
+	return t.collector.GetUniqKeys(t.samples)
+}
