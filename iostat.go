@@ -247,7 +247,6 @@ func (d *DeviceStatsProcessor) ParseRow(row string) (IItem, error) {
 }
 
 func (d *DeviceStatsProcessor) GetAndPurgeRrqmps() map[string]ISampleStats {
-	// todo start here
 	d.lock.Lock()
 	samples := d.rrqmps
 	d.rrqmps = make(map[string]ISampleStats)
@@ -257,7 +256,6 @@ func (d *DeviceStatsProcessor) GetAndPurgeRrqmps() map[string]ISampleStats {
 }
 
 func (d *DeviceStatsProcessor) GetAndPurgeWrqmps() map[string]ISampleStats {
-	// todo start here
 	d.lock.Lock()
 	samples := d.wrqmps
 	d.wrqmps = make(map[string]ISampleStats)
@@ -267,7 +265,6 @@ func (d *DeviceStatsProcessor) GetAndPurgeWrqmps() map[string]ISampleStats {
 }
 
 func (d *DeviceStatsProcessor) GetAndPurgeRps() map[string]ISampleStats {
-	// todo start here
 	d.lock.Lock()
 	samples := d.rps
 	d.rps = make(map[string]ISampleStats)
@@ -277,7 +274,6 @@ func (d *DeviceStatsProcessor) GetAndPurgeRps() map[string]ISampleStats {
 }
 
 func (d *DeviceStatsProcessor) GetAndPurgeWps() map[string]ISampleStats {
-	// todo start here
 	d.lock.Lock()
 	samples := d.wps
 	d.wps = make(map[string]ISampleStats)
@@ -287,7 +283,6 @@ func (d *DeviceStatsProcessor) GetAndPurgeWps() map[string]ISampleStats {
 }
 
 func (d *DeviceStatsProcessor) GetAndPurgeRkbps() map[string]ISampleStats {
-	// todo start here
 	d.lock.Lock()
 	samples := d.rkbps
 	d.rkbps = make(map[string]ISampleStats)
@@ -297,7 +292,6 @@ func (d *DeviceStatsProcessor) GetAndPurgeRkbps() map[string]ISampleStats {
 }
 
 func (d *DeviceStatsProcessor) GetAndPurgeWkbps() map[string]ISampleStats {
-	// todo start here
 	d.lock.Lock()
 	samples := d.wkbps
 	d.wkbps = make(map[string]ISampleStats)
@@ -307,7 +301,6 @@ func (d *DeviceStatsProcessor) GetAndPurgeWkbps() map[string]ISampleStats {
 }
 
 func (d *DeviceStatsProcessor) GetAndPurgeAvgrq_sz() map[string]ISampleStats {
-	// todo start here
 	d.lock.Lock()
 	samples := d.avgrq_sz
 	d.avgrq_sz = make(map[string]ISampleStats)
@@ -317,7 +310,6 @@ func (d *DeviceStatsProcessor) GetAndPurgeAvgrq_sz() map[string]ISampleStats {
 }
 
 func (d *DeviceStatsProcessor) GetAndPurgeAvgqu_sz() map[string]ISampleStats {
-	// todo start here
 	d.lock.Lock()
 	samples := d.avgqu_sz
 	d.avgqu_sz = make(map[string]ISampleStats)
@@ -327,7 +319,6 @@ func (d *DeviceStatsProcessor) GetAndPurgeAvgqu_sz() map[string]ISampleStats {
 }
 
 func (d *DeviceStatsProcessor) GetAndPurgeAwait() map[string]ISampleStats {
-	// todo start here
 	d.lock.Lock()
 	samples := d.await
 	d.await = make(map[string]ISampleStats)
@@ -337,7 +328,6 @@ func (d *DeviceStatsProcessor) GetAndPurgeAwait() map[string]ISampleStats {
 }
 
 func (d *DeviceStatsProcessor) GetAndPurgeRawait() map[string]ISampleStats {
-	// todo start here
 	d.lock.Lock()
 	samples := d.r_await
 	d.r_await = make(map[string]ISampleStats)
@@ -347,7 +337,6 @@ func (d *DeviceStatsProcessor) GetAndPurgeRawait() map[string]ISampleStats {
 }
 
 func (d *DeviceStatsProcessor) GetAndPurgeWawait() map[string]ISampleStats {
-	// todo start here
 	d.lock.Lock()
 	samples := d.w_await
 	d.w_await = make(map[string]ISampleStats)
@@ -357,7 +346,6 @@ func (d *DeviceStatsProcessor) GetAndPurgeWawait() map[string]ISampleStats {
 }
 
 func (d *DeviceStatsProcessor) GetAndPurgeSvctm() map[string]ISampleStats {
-	// todo start here
 	d.lock.Lock()
 	samples := d.svctm
 	d.svctm = make(map[string]ISampleStats)
@@ -367,7 +355,6 @@ func (d *DeviceStatsProcessor) GetAndPurgeSvctm() map[string]ISampleStats {
 }
 
 func (d *DeviceStatsProcessor) GetAndPurgeUtil() map[string]ISampleStats {
-	// todo start here
 	d.lock.Lock()
 	samples := d.util
 	d.util = make(map[string]ISampleStats)
