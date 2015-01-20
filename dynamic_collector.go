@@ -92,7 +92,5 @@ func (d *DynamicCollector) executeCmd(name string, args []string, ch chan<- stri
 		log.Fatal(err)
 	}
 
-	log.Fatalln("command finished")
-
 	close(ch)
 }
