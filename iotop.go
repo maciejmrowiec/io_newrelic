@@ -65,17 +65,17 @@ func IsSampleSummary(row_data string) bool {
 	return strings.Contains(row_data, "Total DISK READ")
 }
 
-type Sample struct {
+type PSample struct {
 	processes_io map[string]*ProcessIO
 }
 
-func NewSample() *Sample {
-	return &Sample{
+func NewPSample() *PSample {
+	return &PSample{
 		processes_io: make(map[string]*ProcessIO),
 	}
 }
 
-func (s *Sample) Append(process *ProcessIO) {
+func (s *PSample) Append(process *ProcessIO) {
 	if val, has := s.processes_io[process.Name]; has {
 		val.Aggregate(process)
 	} else {
@@ -83,7 +83,7 @@ func (s *Sample) Append(process *ProcessIO) {
 	}
 }
 
-func (s *Sample) Empty() bool {
+func (s *PSample) Empty() bool {
 	if len(s.processes_io) > 0 {
 		return false
 	}
@@ -158,7 +158,7 @@ func (i *IOTopCollector) GetUniqKeys(data map[string]*StatSample) []string {
 }
 
 func (i *IOTopCollector) processOutput(data <-chan string) {
-	sample := NewSample()
+	sample := NewPSample()
 
 	for row := range data {
 
@@ -167,7 +167,7 @@ func (i *IOTopCollector) processOutput(data <-chan string) {
 				i.FlushSample(sample)
 			}
 
-			sample = NewSample()
+			sample = NewPSample()
 		} else {
 			p, err := NewProcessIOFromString(row)
 			if err != nil {
@@ -179,7 +179,7 @@ func (i *IOTopCollector) processOutput(data <-chan string) {
 	}
 }
 
-func (i *IOTopCollector) FlushSample(sample *Sample) {
+func (i *IOTopCollector) FlushSample(sample *PSample) {
 	i.measurements_lock.Lock()
 	if i.disk_read_rate == nil {
 		i.disk_read_rate = make(map[string]*StatSample, len(sample.processes_io))
@@ -248,25 +248,4 @@ func (i *IOTopCollector) executeIOTop(ch chan<- string) {
 	}
 
 	close(ch)
-}
-
-type StatSample struct {
-	total float64
-	count float64
-}
-
-func NewStatSample(value float64) *StatSample {
-	return &StatSample{
-		total: value,
-		count: 1,
-	}
-}
-
-func (s *StatSample) Append(value float64) {
-	s.count += 1
-	s.total += value
-}
-
-func (s *StatSample) GetAverage() float64 {
-	return s.total / s.count
 }
