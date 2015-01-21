@@ -142,7 +142,7 @@ func (p *DeviceStatsProcessor) GetCmdName() string {
 }
 
 func (p *DeviceStatsProcessor) GetCmdArgs() []string {
-	return []string{"-xd", "10"}
+	return []string{"-xkd", "10"}
 }
 
 func (d *DeviceStatsProcessor) AggregateSample(sample ISample) {
