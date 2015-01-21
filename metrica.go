@@ -44,7 +44,7 @@ func NewReadRatePerCommand(collector *IOTopCollector, path string) *ReadRatePerC
 }
 
 func (t *ReadRatePerCommand) GetUnits() string {
-	return "kbps"
+	return "kb/s"
 }
 
 func (t *ReadRatePerCommand) GetName(id string) string {
@@ -74,7 +74,7 @@ func NewWriteRatePerCommand(collector *IOTopCollector, path string) *WriteRatePe
 }
 
 func (t *WriteRatePerCommand) GetUnits() string {
-	return "kbps"
+	return "kb/s"
 }
 
 func (t *WriteRatePerCommand) GetName(id string) string {
@@ -138,7 +138,7 @@ func (r *RrqmpsPerDevice) GetName(id string) string {
 }
 
 func (r *RrqmpsPerDevice) GetUnits() string {
-	return "rrqm/s"
+	return "request/s"
 }
 
 func (r *RrqmpsPerDevice) GetValue(id string) (float64, error) {
@@ -168,7 +168,7 @@ func (r *WrqmpsPerDevice) GetName(id string) string {
 }
 
 func (r *WrqmpsPerDevice) GetUnits() string {
-	return "wrqm/s"
+	return "request/s"
 }
 
 func (r *WrqmpsPerDevice) GetValue(id string) (float64, error) {
@@ -318,7 +318,7 @@ func (r *AvgrqszPerDevice) GetName(id string) string {
 }
 
 func (r *AvgrqszPerDevice) GetUnits() string {
-	return "avgrq_sz"
+	return "sectors"
 }
 
 func (r *AvgrqszPerDevice) GetValue(id string) (float64, error) {
@@ -348,7 +348,7 @@ func (r *AvgquszPerDevice) GetName(id string) string {
 }
 
 func (r *AvgquszPerDevice) GetUnits() string {
-	return "avgqu_sz"
+	return "count"
 }
 
 func (r *AvgquszPerDevice) GetValue(id string) (float64, error) {
@@ -378,7 +378,7 @@ func (r *AwaitPerDevice) GetName(id string) string {
 }
 
 func (r *AwaitPerDevice) GetUnits() string {
-	return "await"
+	return "ms"
 }
 
 func (r *AwaitPerDevice) GetValue(id string) (float64, error) {
@@ -408,7 +408,7 @@ func (r *RawaitPerDevice) GetName(id string) string {
 }
 
 func (r *RawaitPerDevice) GetUnits() string {
-	return "r_await"
+	return "ms"
 }
 
 func (r *RawaitPerDevice) GetValue(id string) (float64, error) {
@@ -438,7 +438,7 @@ func (r *WawaitPerDevice) GetName(id string) string {
 }
 
 func (r *WawaitPerDevice) GetUnits() string {
-	return "w_await"
+	return "ms"
 }
 
 func (r *WawaitPerDevice) GetValue(id string) (float64, error) {
@@ -468,7 +468,7 @@ func (r *SvctmPerDevice) GetName(id string) string {
 }
 
 func (r *SvctmPerDevice) GetUnits() string {
-	return "svctm"
+	return "ms"
 }
 
 func (r *SvctmPerDevice) GetValue(id string) (float64, error) {
