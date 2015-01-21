@@ -1,10 +1,7 @@
 package main
 
 import (
-	"bufio"
 	"errors"
-	"log"
-	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
@@ -22,19 +19,29 @@ type ProcessIO struct {
 	disk_write_rate float64
 	swapin_percent  float64
 	io_percent      float64
-	Name            string
+	name            string
 }
 
-// expected format:
-//13:05:19 24086 be/4 cfapache    0.00 K/s    0.00 K/s  0.00 %  0.00 % httpd -k start
-func NewProcessIOFromString(row_data string) (*ProcessIO, error) {
+func (p *ProcessIO) GetName() string {
+	return p.name
+}
+
+func (p *ProcessIO) Aggregate(item IItem) {
+	process := item.(*ProcessIO)
+	p.disk_read_rate += process.disk_read_rate
+	p.disk_write_rate += process.disk_write_rate
+	p.swapin_percent += process.swapin_percent
+	p.io_percent += process.io_percent
+}
+
+func ProcessIOParseRow(row_data string) (IItem, error) {
 	tokens := RowRegex.Split(row_data, 13)
 	if len(tokens) != 13 {
 		return nil, errors.New("Failed to parse row data for sample")
 	}
 
 	var err error
-	process_io := &ProcessIO{}
+	process_io := new(ProcessIO)
 
 	if process_io.disk_read_rate, err = strconv.ParseFloat(tokens[4], 64); err != nil {
 		return nil, err
@@ -48,106 +55,69 @@ func NewProcessIOFromString(row_data string) (*ProcessIO, error) {
 	if process_io.io_percent, err = strconv.ParseFloat(tokens[10], 64); err != nil {
 		return nil, err
 	}
-	process_io.Name = tokens[12]
+	process_io.name = tokens[12]
 
 	return process_io, nil
 }
 
-func (p *ProcessIO) Aggregate(process *ProcessIO) {
-	p.disk_read_rate += process.disk_read_rate
-	p.disk_write_rate += process.disk_write_rate
-	p.swapin_percent += process.swapin_percent
-	p.io_percent += process.io_percent
-}
-
-// Total DISK READ: 0.20 K/s | Total DISK WRITE: 0.01 K/s
-func IsSampleSummary(row_data string) bool {
+func ProcessIOIsHeader(row_data string) bool {
 	return strings.Contains(row_data, "Total DISK READ")
 }
 
-type PSample struct {
-	processes_io map[string]*ProcessIO
+type ProcessIOProcessor struct {
+	disk_read_rate    map[string]ISampleStats
+	disk_write_rate   map[string]ISampleStats
+	swapin_percent    map[string]ISampleStats
+	io_percent        map[string]ISampleStats
+	measurements_lock sync.Mutex
 }
 
-func NewPSample() *PSample {
-	return &PSample{
-		processes_io: make(map[string]*ProcessIO),
+func NewProcessIOProcessor() *ProcessIOProcessor {
+	return &ProcessIOProcessor{
+		disk_read_rate:  make(map[string]ISampleStats, 200),
+		disk_write_rate: make(map[string]ISampleStats, 200),
+		swapin_percent:  make(map[string]ISampleStats, 200),
+		io_percent:      make(map[string]ISampleStats, 200),
 	}
 }
 
-func (s *PSample) Append(process *ProcessIO) {
-	if val, has := s.processes_io[process.Name]; has {
-		val.Aggregate(process)
-	} else {
-		s.processes_io[process.Name] = process
-	}
-}
-
-func (s *PSample) Empty() bool {
-	if len(s.processes_io) > 0 {
-		return false
-	}
-
-	return true
-}
-
-type IOTopCollector struct {
-	disk_read_rate    map[string]*StatSample
-	disk_write_rate   map[string]*StatSample
-	swapin_percent    map[string]*StatSample
-	io_percent        map[string]*StatSample
-	measurements_lock sync.RWMutex
-}
-
-func (i *IOTopCollector) Run() {
-	i.measurements_lock.Lock()
-
-	command_pipe := make(chan string, 1000)
-
-	go i.executeIOTop(command_pipe)
-	go i.processOutput(command_pipe)
-
-	i.measurements_lock.Unlock()
-
-}
-
-func (i *IOTopCollector) GetAndPurgeIOPercent() map[string]*StatSample {
+func (i *ProcessIOProcessor) GetAndPurgeIOPercent() map[string]ISampleStats {
 	i.measurements_lock.Lock()
 	samples := i.io_percent
-	i.io_percent = nil
+	i.io_percent = make(map[string]ISampleStats, 200)
 	i.measurements_lock.Unlock()
 
 	return samples
 }
 
-func (i *IOTopCollector) GetAndPurgeSwapinPercent() map[string]*StatSample {
+func (i *ProcessIOProcessor) GetAndPurgeSwapinPercent() map[string]ISampleStats {
 	i.measurements_lock.Lock()
 	samples := i.swapin_percent
-	i.swapin_percent = nil
+	i.swapin_percent = make(map[string]ISampleStats, 200)
 	i.measurements_lock.Unlock()
 
 	return samples
 }
 
-func (i *IOTopCollector) GetAndPurgeDiskReadRate() map[string]*StatSample {
+func (i *ProcessIOProcessor) GetAndPurgeDiskReadRate() map[string]ISampleStats {
 	i.measurements_lock.Lock()
 	samples := i.disk_read_rate
-	i.disk_read_rate = nil
+	i.disk_read_rate = make(map[string]ISampleStats, 200)
 	i.measurements_lock.Unlock()
 
 	return samples
 }
 
-func (i *IOTopCollector) GetAndPurgeDiskWriteRate() map[string]*StatSample {
+func (i *ProcessIOProcessor) GetAndPurgeDiskWriteRate() map[string]ISampleStats {
 	i.measurements_lock.Lock()
 	samples := i.disk_write_rate
-	i.disk_write_rate = nil
+	i.disk_write_rate = make(map[string]ISampleStats, 200)
 	i.measurements_lock.Unlock()
 
 	return samples
 }
 
-func (i *IOTopCollector) GetUniqKeys(data map[string]*StatSample) []string {
+func (i *ProcessIOProcessor) GetUniqKeys(data map[string]ISampleStats) []string {
 	var sample_list []string
 
 	for key := range data {
@@ -157,95 +127,55 @@ func (i *IOTopCollector) GetUniqKeys(data map[string]*StatSample) []string {
 	return sample_list
 }
 
-func (i *IOTopCollector) processOutput(data <-chan string) {
-	sample := NewPSample()
-
-	for row := range data {
-
-		if IsSampleSummary(row) {
-			if sample != nil && !sample.Empty() {
-				i.FlushSample(sample)
-			}
-
-			sample = NewPSample()
-		} else {
-			p, err := NewProcessIOFromString(row)
-			if err != nil {
-				continue
-			}
-
-			sample.Append(p)
-		}
-	}
+func (p *ProcessIOProcessor) GetCmdName() string {
+	return "iotop"
 }
 
-func (i *IOTopCollector) FlushSample(sample *PSample) {
+func (p *ProcessIOProcessor) GetCmdArgs() []string {
+	return []string{"-bPkqqt"}
+}
+
+func (i *ProcessIOProcessor) AggregateSample(sample ISample) {
 	i.measurements_lock.Lock()
-	if i.disk_read_rate == nil {
-		i.disk_read_rate = make(map[string]*StatSample, len(sample.processes_io))
-	}
 
-	if i.disk_write_rate == nil {
-		i.disk_write_rate = make(map[string]*StatSample, len(sample.processes_io))
-	}
+	for key, val := range sample.GetMap() {
+		pio := val.(*ProcessIO)
 
-	if i.io_percent == nil {
-		i.io_percent = make(map[string]*StatSample, len(sample.processes_io))
-	}
-
-	if i.swapin_percent == nil {
-		i.swapin_percent = make(map[string]*StatSample, len(sample.processes_io))
-	}
-
-	for key, val := range sample.processes_io {
 		if entry, has := i.disk_read_rate[key]; has {
-			entry.Append(val.disk_read_rate)
+			entry.Append(pio.disk_read_rate)
 		} else {
-			i.disk_read_rate[key] = NewStatSample(val.disk_read_rate)
+			i.disk_read_rate[key] = NewStatSample(pio.disk_read_rate)
 		}
 
 		if entry, has := i.disk_write_rate[key]; has {
-			entry.Append(val.disk_write_rate)
+			entry.Append(pio.disk_write_rate)
 		} else {
-			i.disk_write_rate[key] = NewStatSample(val.disk_write_rate)
+			i.disk_write_rate[key] = NewStatSample(pio.disk_write_rate)
 		}
 
 		if entry, has := i.io_percent[key]; has {
-			entry.Append(val.io_percent)
+			entry.Append(pio.io_percent)
 		} else {
-			i.io_percent[key] = NewStatSample(val.io_percent)
+			i.io_percent[key] = NewStatSample(pio.io_percent)
 		}
 
 		if entry, has := i.swapin_percent[key]; has {
-			entry.Append(val.swapin_percent)
+			entry.Append(pio.swapin_percent)
 		} else {
-			i.swapin_percent[key] = NewStatSample(val.swapin_percent)
+			i.swapin_percent[key] = NewStatSample(pio.swapin_percent)
 		}
 	}
 	i.measurements_lock.Unlock()
 }
 
-func (i *IOTopCollector) executeIOTop(ch chan<- string) {
-	cmd := exec.Command("iotop", "-bPkqqt")
-	stdout, err := cmd.StdoutPipe()
+func (p *ProcessIOProcessor) NewSample() ISample {
+	return NewSample()
+}
 
-	if err != nil {
-		log.Fatal(err)
-	}
+func (p *ProcessIOProcessor) IsHeader(row string) bool {
+	return ProcessIOIsHeader(row)
+}
 
-	if err = cmd.Start(); err != nil {
-		log.Fatal(err)
-	}
-
-	in := bufio.NewScanner(stdout)
-
-	for in.Scan() {
-		ch <- in.Text()
-	}
-
-	if err := in.Err(); err != nil {
-		log.Fatal(err)
-	}
-
-	close(ch)
+func (p *ProcessIOProcessor) ParseRow(row string) (IItem, error) {
+	return ProcessIOParseRow(row)
 }

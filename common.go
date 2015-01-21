@@ -1,5 +1,19 @@
 package main
 
+import (
+	"math"
+)
+
+var Epsilon float64
+
+func init() {
+	Epsilon = math.Nextafter(1.0, 2.0) - 1.0
+}
+
+func IsFloat64Equal(a float64, b float64) bool {
+	return math.Abs(a-b) < Epsilon
+}
+
 type StatSample struct {
 	total float64
 	count float64

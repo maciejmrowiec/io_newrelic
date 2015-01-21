@@ -42,7 +42,7 @@ func DeviceStatsParseRow(row string) (IItem, error) {
 	}
 
 	var err error
-	device_stat := &DeviceStats{}
+	device_stat := new(DeviceStats)
 
 	device_stat.name = tokens[0]
 

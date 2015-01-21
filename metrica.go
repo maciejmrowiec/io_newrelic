@@ -1,14 +1,14 @@
 package main
 
 type TotalIOPerCommand struct {
-	collector *IOTopCollector
+	processor *ProcessIOProcessor
 	path      string
-	samples   map[string]*StatSample
+	samples   map[string]ISampleStats
 }
 
-func NewTotalIOPerCommand(collector *IOTopCollector, path string) *TotalIOPerCommand {
+func NewTotalIOPerCommand(processor *ProcessIOProcessor, path string) *TotalIOPerCommand {
 	return &TotalIOPerCommand{
-		collector: collector,
+		processor: processor,
 		path:      path,
 	}
 }
@@ -26,19 +26,19 @@ func (t *TotalIOPerCommand) GetValue(id string) (float64, error) {
 }
 
 func (t *TotalIOPerCommand) GetIdList() []string {
-	t.samples = t.collector.GetAndPurgeIOPercent()
-	return t.collector.GetUniqKeys(t.samples)
+	t.samples = t.processor.GetAndPurgeIOPercent()
+	return t.processor.GetUniqKeys(t.samples)
 }
 
 type ReadRatePerCommand struct {
-	collector *IOTopCollector
+	processor *ProcessIOProcessor
 	path      string
-	samples   map[string]*StatSample
+	samples   map[string]ISampleStats
 }
 
-func NewReadRatePerCommand(collector *IOTopCollector, path string) *ReadRatePerCommand {
+func NewReadRatePerCommand(processor *ProcessIOProcessor, path string) *ReadRatePerCommand {
 	return &ReadRatePerCommand{
-		collector: collector,
+		processor: processor,
 		path:      path,
 	}
 }
@@ -56,19 +56,19 @@ func (t *ReadRatePerCommand) GetValue(id string) (float64, error) {
 }
 
 func (t *ReadRatePerCommand) GetIdList() []string {
-	t.samples = t.collector.GetAndPurgeDiskReadRate()
-	return t.collector.GetUniqKeys(t.samples)
+	t.samples = t.processor.GetAndPurgeDiskReadRate()
+	return t.processor.GetUniqKeys(t.samples)
 }
 
 type WriteRatePerCommand struct {
-	collector *IOTopCollector
+	processor *ProcessIOProcessor
 	path      string
-	samples   map[string]*StatSample
+	samples   map[string]ISampleStats
 }
 
-func NewWriteRatePerCommand(collector *IOTopCollector, path string) *WriteRatePerCommand {
+func NewWriteRatePerCommand(processor *ProcessIOProcessor, path string) *WriteRatePerCommand {
 	return &WriteRatePerCommand{
-		collector: collector,
+		processor: processor,
 		path:      path,
 	}
 }
@@ -86,19 +86,19 @@ func (t *WriteRatePerCommand) GetValue(id string) (float64, error) {
 }
 
 func (t *WriteRatePerCommand) GetIdList() []string {
-	t.samples = t.collector.GetAndPurgeDiskWriteRate()
-	return t.collector.GetUniqKeys(t.samples)
+	t.samples = t.processor.GetAndPurgeDiskWriteRate()
+	return t.processor.GetUniqKeys(t.samples)
 }
 
 type SwapinPerCommand struct {
-	collector *IOTopCollector
+	processor *ProcessIOProcessor
 	path      string
-	samples   map[string]*StatSample
+	samples   map[string]ISampleStats
 }
 
-func NewSwapinPerCommand(collector *IOTopCollector, path string) *SwapinPerCommand {
+func NewSwapinPerCommand(processor *ProcessIOProcessor, path string) *SwapinPerCommand {
 	return &SwapinPerCommand{
-		collector: collector,
+		processor: processor,
 		path:      path,
 	}
 }
@@ -116,8 +116,8 @@ func (t *SwapinPerCommand) GetValue(id string) (float64, error) {
 }
 
 func (t *SwapinPerCommand) GetIdList() []string {
-	t.samples = t.collector.GetAndPurgeSwapinPercent()
-	return t.collector.GetUniqKeys(t.samples)
+	t.samples = t.processor.GetAndPurgeSwapinPercent()
+	return t.processor.GetUniqKeys(t.samples)
 }
 
 type RrqmpsPerDevice struct {

@@ -34,23 +34,24 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// top := &IOTopCollector{}
-	// top.Run()
+	iotop_processor := NewProcessIOProcessor()
+	NewDynamicCollector(iotop_processor).Run()
 
 	iostat_processor := NewDeviceStatsProcessor()
-	iostat_collector := NewDynamicCollector(iostat_processor)
-	iostat_collector.Run()
+	NewDynamicCollector(iostat_processor).Run()
 
 	component := NewDynamicPluginComponent(hostname, "com.github.maciejmrowiec.io_newrelic")
 
 	plugin := newrelic_platform_go.NewNewrelicPlugin("0.0.2", "dfa8fd72df76280f63342a77af576f97023e7f74", 60)
 	plugin.AddComponent(component)
 
-	// component.AddDynamicMetrica(NewTotalIOPerCommand(top, "io/process/total_io_percentage"))
-	// component.AddDynamicMetrica(NewReadRatePerCommand(top, "io/process/read_rate"))
-	// component.AddDynamicMetrica(NewWriteRatePerCommand(top, "io/process/write_rate"))
-	// component.AddDynamicMetrica(NewSwapinPerCommand(top, "io/process/swapin_percentage"))
+	// Collect IO usage per process
+	component.AddDynamicMetrica(NewTotalIOPerCommand(iotop_processor, "io/process/total_io_percentage"))
+	component.AddDynamicMetrica(NewReadRatePerCommand(iotop_processor, "io/process/read_rate"))
+	component.AddDynamicMetrica(NewWriteRatePerCommand(iotop_processor, "io/process/write_rate"))
+	component.AddDynamicMetrica(NewSwapinPerCommand(iotop_processor, "io/process/swapin_percentage"))
 
+	// Collect IO stats per device
 	component.AddDynamicMetrica(NewRrqmpsPerDevice(iostat_processor, "io/device/rrqmps"))
 	component.AddDynamicMetrica(NewWrqmpsPerDevice(iostat_processor, "io/device/wrqmps"))
 	component.AddDynamicMetrica(NewRpsPerDevice(iostat_processor, "io/device/rps"))
