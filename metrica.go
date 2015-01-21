@@ -44,7 +44,7 @@ func NewReadRatePerCommand(processor *ProcessIOProcessor, path string) *ReadRate
 }
 
 func (t *ReadRatePerCommand) GetUnits() string {
-	return "kb/s"
+	return "kbps"
 }
 
 func (t *ReadRatePerCommand) GetName(id string) string {
@@ -74,7 +74,7 @@ func NewWriteRatePerCommand(processor *ProcessIOProcessor, path string) *WriteRa
 }
 
 func (t *WriteRatePerCommand) GetUnits() string {
-	return "kb/s"
+	return "kbps"
 }
 
 func (t *WriteRatePerCommand) GetName(id string) string {
@@ -138,7 +138,7 @@ func (r *RrqmpsPerDevice) GetName(id string) string {
 }
 
 func (r *RrqmpsPerDevice) GetUnits() string {
-	return "request/s"
+	return "requestps"
 }
 
 func (r *RrqmpsPerDevice) GetValue(id string) (float64, error) {
@@ -168,7 +168,7 @@ func (r *WrqmpsPerDevice) GetName(id string) string {
 }
 
 func (r *WrqmpsPerDevice) GetUnits() string {
-	return "request/s"
+	return "requestps"
 }
 
 func (r *WrqmpsPerDevice) GetValue(id string) (float64, error) {
@@ -198,7 +198,7 @@ func (r *RpsPerDevice) GetName(id string) string {
 }
 
 func (r *RpsPerDevice) GetUnits() string {
-	return "r/s"
+	return "rps"
 }
 
 func (r *RpsPerDevice) GetValue(id string) (float64, error) {
@@ -228,7 +228,7 @@ func (r *WpsPerDevice) GetName(id string) string {
 }
 
 func (r *WpsPerDevice) GetUnits() string {
-	return "w/s"
+	return "wps"
 }
 
 func (r *WpsPerDevice) GetValue(id string) (float64, error) {
@@ -258,7 +258,7 @@ func (r *RkbpsPerDevice) GetName(id string) string {
 }
 
 func (r *RkbpsPerDevice) GetUnits() string {
-	return "kb/s"
+	return "kbps"
 }
 
 func (r *RkbpsPerDevice) GetValue(id string) (float64, error) {
@@ -288,7 +288,7 @@ func (r *WkbpsPerDevice) GetName(id string) string {
 }
 
 func (r *WkbpsPerDevice) GetUnits() string {
-	return "kb/s"
+	return "kbps"
 }
 
 func (r *WkbpsPerDevice) GetValue(id string) (float64, error) {
