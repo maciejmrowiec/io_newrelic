@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func Test_devicestats_parse(t *testing.T) {
+func Test_devicestats_parse_ubuntu(t *testing.T) {
 	str := "sda               0.10     0.20    0.30    0.40     0.50     0.60     0.70     0.80    0.90    1.00    1.10   1.20   1.30"
 
 	d, err := DeviceStatsParseRow(str)
@@ -58,6 +58,70 @@ func Test_devicestats_parse(t *testing.T) {
 		t.Fail()
 	}
 	if !IsFloat64Equal(device.w_await, 1.1) {
+		t.Fail()
+	}
+	if !IsFloat64Equal(device.svctm, 1.2) {
+		t.Fail()
+	}
+	if !IsFloat64Equal(device.util, 1.3) {
+		t.Fail()
+	}
+}
+
+func Test_devicestats_parse_centos(t *testing.T) {
+	str := "sda               0.10     0.20    0.30    0.40     0.50     0.60     0.70     0.80    0.90    1.20   1.30"
+
+	d, err := DeviceStatsParseRow(str)
+	device := d.(*DeviceStats)
+
+	if err != nil {
+		t.FailNow()
+	}
+
+	if device.name != "sda" {
+		t.Fail()
+	}
+
+	if !IsFloat64Equal(device.rrqmps, 0.1) {
+		t.Fail()
+	}
+
+	if !IsFloat64Equal(device.wrqmps, 0.2) {
+		t.Fail()
+	}
+
+	if !IsFloat64Equal(device.rps, 0.3) {
+		t.Fail()
+	}
+
+	if !IsFloat64Equal(device.wps, 0.4) {
+		t.Fail()
+	}
+
+	if !IsFloat64Equal(device.rkbps, 0.5) {
+		t.Fail()
+	}
+
+	if !IsFloat64Equal(device.wkbps, 0.6) {
+		t.Fail()
+	}
+
+	if !IsFloat64Equal(device.avgrq_sz, 0.7) {
+		t.Fail()
+	}
+
+	if !IsFloat64Equal(device.avgqu_sz, 0.8) {
+		t.Fail()
+	}
+
+	if !IsFloat64Equal(device.await, 0.9) {
+		t.Fail()
+	}
+
+	if !IsFloat64Equal(device.r_await, 0.0) {
+		t.Fail()
+	}
+	if !IsFloat64Equal(device.w_await, 0.0) {
 		t.Fail()
 	}
 	if !IsFloat64Equal(device.svctm, 1.2) {

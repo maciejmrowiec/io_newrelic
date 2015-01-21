@@ -37,68 +37,119 @@ func DeviceStatsIsHeader(row string) bool {
 func DeviceStatsParseRow(row string) (IItem, error) {
 	tokens := strings.Fields(row)
 
-	if len(tokens) != 14 {
-		return nil, errors.New("Failed to parse iostat")
-	}
-
 	var err error
-	device_stat := new(DeviceStats)
 
-	device_stat.name = tokens[0]
+	switch len(tokens) {
+	case 14:
+		device_stat := new(DeviceStats)
+		device_stat.name = tokens[0]
 
-	if device_stat.rrqmps, err = strconv.ParseFloat(tokens[1], 64); err != nil {
-		return nil, err
+		if device_stat.rrqmps, err = strconv.ParseFloat(tokens[1], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.wrqmps, err = strconv.ParseFloat(tokens[2], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.rps, err = strconv.ParseFloat(tokens[3], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.wps, err = strconv.ParseFloat(tokens[4], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.rkbps, err = strconv.ParseFloat(tokens[5], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.wkbps, err = strconv.ParseFloat(tokens[6], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.avgrq_sz, err = strconv.ParseFloat(tokens[7], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.avgqu_sz, err = strconv.ParseFloat(tokens[8], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.await, err = strconv.ParseFloat(tokens[9], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.r_await, err = strconv.ParseFloat(tokens[10], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.w_await, err = strconv.ParseFloat(tokens[11], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.svctm, err = strconv.ParseFloat(tokens[12], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.util, err = strconv.ParseFloat(tokens[13], 64); err != nil {
+			return nil, err
+		}
+
+		return device_stat, nil
+
+	case 12:
+		device_stat := new(DeviceStats)
+		device_stat.name = tokens[0]
+
+		if device_stat.rrqmps, err = strconv.ParseFloat(tokens[1], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.wrqmps, err = strconv.ParseFloat(tokens[2], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.rps, err = strconv.ParseFloat(tokens[3], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.wps, err = strconv.ParseFloat(tokens[4], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.rkbps, err = strconv.ParseFloat(tokens[5], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.wkbps, err = strconv.ParseFloat(tokens[6], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.avgrq_sz, err = strconv.ParseFloat(tokens[7], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.avgqu_sz, err = strconv.ParseFloat(tokens[8], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.await, err = strconv.ParseFloat(tokens[9], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.svctm, err = strconv.ParseFloat(tokens[10], 64); err != nil {
+			return nil, err
+		}
+
+		if device_stat.util, err = strconv.ParseFloat(tokens[11], 64); err != nil {
+			return nil, err
+		}
+
+		return device_stat, nil
 	}
 
-	if device_stat.wrqmps, err = strconv.ParseFloat(tokens[2], 64); err != nil {
-		return nil, err
-	}
-
-	if device_stat.rps, err = strconv.ParseFloat(tokens[3], 64); err != nil {
-		return nil, err
-	}
-
-	if device_stat.wps, err = strconv.ParseFloat(tokens[4], 64); err != nil {
-		return nil, err
-	}
-
-	if device_stat.rkbps, err = strconv.ParseFloat(tokens[5], 64); err != nil {
-		return nil, err
-	}
-
-	if device_stat.wkbps, err = strconv.ParseFloat(tokens[6], 64); err != nil {
-		return nil, err
-	}
-
-	if device_stat.avgrq_sz, err = strconv.ParseFloat(tokens[7], 64); err != nil {
-		return nil, err
-	}
-
-	if device_stat.avgqu_sz, err = strconv.ParseFloat(tokens[8], 64); err != nil {
-		return nil, err
-	}
-
-	if device_stat.await, err = strconv.ParseFloat(tokens[9], 64); err != nil {
-		return nil, err
-	}
-
-	if device_stat.r_await, err = strconv.ParseFloat(tokens[10], 64); err != nil {
-		return nil, err
-	}
-
-	if device_stat.w_await, err = strconv.ParseFloat(tokens[11], 64); err != nil {
-		return nil, err
-	}
-
-	if device_stat.svctm, err = strconv.ParseFloat(tokens[12], 64); err != nil {
-		return nil, err
-	}
-
-	if device_stat.util, err = strconv.ParseFloat(tokens[13], 64); err != nil {
-		return nil, err
-	}
-
-	return device_stat, nil
+	return nil, errors.New("Failed to parse iostat")
 }
 
 type DeviceStatsProcessor struct {
