@@ -2,6 +2,7 @@
 *.o
 *.a
 *.so
+io_newrelic
 
 # Folders
 _obj
