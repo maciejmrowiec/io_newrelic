@@ -1,3 +1,6 @@
+
+[![Build Status](https://drone.io/github.com/maciejmrowiec/io_newrelic/status.png)](https://drone.io/github.com/maciejmrowiec/io_newrelic/latest)
+
 # io_newrelic
 NewRelic plugin for measuring I/O usage.
 
