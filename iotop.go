@@ -132,7 +132,7 @@ func (p *ProcessIOProcessor) GetCmdName() string {
 }
 
 func (p *ProcessIOProcessor) GetCmdArgs() []string {
-	return []string{"-bPkqqt"}
+	return []string{"-bPkqqtd", "2"}
 }
 
 func (i *ProcessIOProcessor) AggregateSample(sample ISample) {
