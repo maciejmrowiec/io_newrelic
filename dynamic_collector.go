@@ -71,26 +71,28 @@ func (d *DynamicCollector) processOutput(ch <-chan string) {
 }
 
 func (d *DynamicCollector) executeCmd(name string, args []string, ch chan<- string) {
-	cmd := exec.Command(name, args...)
-	stdout, err := cmd.StdoutPipe()
 
-	if err != nil {
-		log.Fatal(err)
+	execute_cmd := func() {
+		cmd := exec.Command(name, args...)
+		stdout, err := cmd.StdoutPipe()
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if err = cmd.Start(); err != nil {
+			log.Fatal(err)
+		}
+
+		in := bufio.NewScanner(stdout)
+
+		for in.Scan() {
+			ch <- in.Text()
+		}
 	}
 
-	if err = cmd.Start(); err != nil {
-		log.Fatal(err)
+	for true {
+		execute_cmd()
 	}
 
-	in := bufio.NewScanner(stdout)
-
-	for in.Scan() {
-		ch <- in.Text()
-	}
-
-	if err := in.Err(); err != nil {
-		log.Fatal(err)
-	}
-
-	close(ch)
 }
