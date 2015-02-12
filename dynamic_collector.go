@@ -83,6 +83,7 @@ func (d *DynamicCollector) executeCmd(name string, args []string, ch chan<- stri
 		if err = cmd.Start(); err != nil {
 			log.Fatal(err)
 		}
+		defer cmd.Wait()
 
 		in := bufio.NewScanner(stdout)
 
